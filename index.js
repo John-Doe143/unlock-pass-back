@@ -7,21 +7,28 @@ const app = express();
 const port = 5000;
 
 // Middleware
-// Middleware
 app.use(cors({
   origin: [
-    "http://localhost:5173",  // Your local development server
-    "https://pass-pi.vercel.app"
+    "http://localhost:5173",  // Local development
+    "https://your-frontend-url.vercel.app"  // Deployed front-end URL
   ],
-  methods: ['GET', 'POST'],  // Allow GET and POST requests
-  credentials: true  // Allow cookies or authorization headers
+  methods: ['GET', 'POST'],
+  credentials: true
 }));
 app.use(express.json());
 
-// Encryption Key (ensure it is securely stored in .env)
-const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');  // 32-byte key
+// Encryption key
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY
+  ? Buffer.from(process.env.ENCRYPTION_KEY, 'hex')
+  : null;
 
-// Function to decrypt password
+// Check if ENCRYPTION_KEY is valid
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
+  console.error("Invalid ENCRYPTION_KEY. It must be a 32-byte hexadecimal string.");
+  process.exit(1);
+}
+
+// Decrypt password
 const decryptPassword = (encryptedPassword, iv) => {
   try {
     const ivBuffer = Buffer.from(iv, 'hex');
@@ -36,24 +43,23 @@ const decryptPassword = (encryptedPassword, iv) => {
   }
 };
 
-
-// Endpoint to decrypt password
+// API Endpoint
 app.post('/api/decrypt-password', (req, res) => {
   const { encryptedPassword, iv } = req.body;
 
   if (!encryptedPassword || !iv) {
-    return res.status(400).json({ error: 'Both encryptedPassword and iv are required.' });
+    return res.status(400).json({ error: 'Both encryptedPassword and IV are required.' });
   }
 
   try {
     const decryptedPassword = decryptPassword(encryptedPassword, iv);
     res.status(200).json({ decryptedPassword });
   } catch (error) {
-    res.status(500).json({ error: 'Decryption failed.' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
