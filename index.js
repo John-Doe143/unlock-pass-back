@@ -24,23 +24,18 @@ const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');  // 32-by
 // Function to decrypt password
 const decryptPassword = (encryptedPassword, iv) => {
   try {
-    // Convert the IV and encryptedPassword to buffers
     const ivBuffer = Buffer.from(iv, 'hex');
     const encryptedPasswordBuffer = Buffer.from(encryptedPassword, 'hex');
-
-    // Create a decipher instance using AES-256-CBC
     const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, ivBuffer);
-
-    // Decrypt the password
     let decrypted = decipher.update(encryptedPasswordBuffer, undefined, 'utf8');
     decrypted += decipher.final('utf8');
-
-    return decrypted;  // Return the decrypted password
+    return decrypted;
   } catch (error) {
     console.error('Error decrypting password:', error);
-    throw new Error('Failed to decrypt password');
+    throw new Error('Decryption failed');
   }
 };
+
 
 // Endpoint to decrypt password
 app.post('/api/decrypt-password', (req, res) => {
