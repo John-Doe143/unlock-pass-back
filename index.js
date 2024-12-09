@@ -7,7 +7,15 @@ const app = express();
 const port = 5000;
 
 // Middleware
-app.use(cors());
+// Middleware
+app.use(cors({
+  origin: [
+    "http://localhost:5173",  // Your local development server
+    "https://pass-pi.vercel.app"
+  ],
+  methods: ['GET', 'POST'],  // Allow GET and POST requests
+  credentials: true  // Allow cookies or authorization headers
+}));
 app.use(express.json());
 
 // Encryption Key (ensure it is securely stored in .env)
